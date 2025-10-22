@@ -3,8 +3,9 @@ from concurrent.futures import ThreadPoolExecutor, Future
 from urllib.parse import urljoin
 from typing import Dict, Any
 
+from pymotego._constants import DEFAULT_API_BASE_URL
 
-BASEURL = "http://localhost:9012/api/broadcast/data/"
+BASEURL = urljoin(DEFAULT_API_BASE_URL, "broadcast/data/")
 DEFAULT_BROADCAST_PATH = "default"
 
 
