@@ -1,5 +1,6 @@
 import base64
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Iterable, Sequence
 
 from httpx import Client, Response, URL
@@ -15,6 +16,21 @@ class EmailAttachment:
 
     filename: str
     content: bytes
+
+
+@dataclass(frozen=True)
+class EmailAttachmentPayload:
+    """Serialized attachment ready for transport."""
+
+    filename: str
+    content: str
+
+
+@dataclass(frozen=True)
+class EmailPayload:
+    subject: str
+    html_body: str
+    attachments: list[EmailAttachmentPayload] | None = None
 
 
 class EmailClient:
@@ -37,34 +53,31 @@ class EmailClient:
         attachments: Sequence[EmailAttachment] | None = None,
     ) -> Response:
         """Send an email payload to cogmoteGO."""
-        payload: dict[str, object] = {
-            "subject": subject,
-            "html_body": html_body,
-        }
+        attachments_payload = _prepare_attachments(attachments)
+        payload = EmailPayload(
+            subject=subject,
+            html_body=html_body,
+            attachments=attachments_payload,
+        )
 
-        if attachments:
-            payload["attachments"] = [
-                {
-                    "filename": attachment.filename,
-                    "content": _encode_attachment(attachment.content),
-                }
-                for attachment in attachments
-            ]
-
-        return self._client.post(self._email_url, json=payload)
+        return self._client.post(self._email_url, json=asdict(payload))
 
     def send_with_files(
         self,
         subject: str,
         html_body: str,
-        files: Iterable[tuple[str, bytes]],
+        files: Iterable[tuple[str, str | Path]],
     ) -> Response:
-        """Helper for sending emails where attachments are provided as `(filename, content)` tuples."""
+        """Send emails where attachments are described by `(filename, path)` tuples."""
         attachments = [
-            EmailAttachment(filename=filename, content=content)
-            for filename, content in files
+            EmailAttachment(filename=filename, content=_read_file_bytes(path))
+            for filename, path in files
         ]
-        return self.send(subject=subject, html_body=html_body, attachments=attachments)
+        return self.send(
+            subject=subject,
+            html_body=html_body,
+            attachments=attachments,
+        )
 
     def close(self) -> None:
         """Release underlying HTTP resources."""
@@ -82,13 +95,35 @@ def _encode_attachment(content: bytes) -> str:
     return base64.b64encode(content).decode("ascii")
 
 
+def _prepare_attachments(
+    attachments: Sequence[EmailAttachment] | None,
+) -> list["EmailAttachmentPayload"] | None:
+    if not attachments:
+        return None
+
+    prepared: list[EmailAttachmentPayload] = []
+    for attachment in attachments:
+        prepared.append(
+            EmailAttachmentPayload(
+                filename=attachment.filename,
+                content=_encode_attachment(attachment.content),
+            )
+        )
+    return prepared
+
+
+def _read_file_bytes(path: str | Path) -> bytes:
+    return Path(path).expanduser().read_bytes()
+
+
 if __name__ == "__main__":
-    attachment = EmailAttachment(filename="hello.txt", content=b"Hello, cogmoteGO!")
     with EmailClient() as client:
         response = client.send(
             subject="Test Email",
             html_body="<p>Email client smoke test</p>",
-            attachments=[attachment],
+            attachments=[
+                EmailAttachment(filename="hello.txt", content=b"Hello, cogmoteGO!")
+            ],
         )
     print(f"Status: {response.status_code}")
     print(f"Body: {response.text}")
