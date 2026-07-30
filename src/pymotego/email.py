@@ -1,9 +1,11 @@
 import base64
+from collections.abc import Iterable, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
+from types import TracebackType
+from typing import Self
 
-from httpx import Client, Response, URL
+from httpx import Client, Response
 
 from pymotego.constants import DEFAULT_API_BASE_URL
 
@@ -74,13 +76,7 @@ class EmailClient:
 
     def __init__(self) -> None:
         """Configure client with HTTP/2 enabled connection pooling."""
-        base_url = URL(DEFAULT_API_BASE_URL)
-        path = base_url.path
-        if not path.endswith("/"):
-            base_url = base_url.copy_with(path=path.rstrip("/") + "/")
-
-        self._client = Client(base_url=base_url, http2=True)
-        self._email_url = base_url.join(EMAIL_ENDPOINT)
+        self._client = Client(base_url=DEFAULT_API_BASE_URL, http2=True)
 
     def send(
         self,
@@ -101,7 +97,7 @@ class EmailClient:
             in_reply_to=in_reply_to,
         )
 
-        response = self._client.post(self._email_url, json=asdict(payload))
+        response = self._client.post(EMAIL_ENDPOINT, json=asdict(payload))
 
         if not response.is_success:
             raise EmailSendError(
@@ -138,10 +134,15 @@ class EmailClient:
         """Release underlying HTTP resources."""
         self._client.close()
 
-    def __enter__(self) -> "EmailClient":
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self.close()
 
 
@@ -152,7 +153,7 @@ def _encode_attachment(content: bytes) -> str:
 
 def _prepare_attachments(
     attachments: Sequence[EmailAttachment] | None,
-) -> list["EmailAttachmentPayload"] | None:
+) -> list[EmailAttachmentPayload] | None:
     if not attachments:
         return None
 
@@ -169,7 +170,7 @@ def _prepare_attachments(
 
 def _prepare_embeds(
     embeds: Sequence[EmailEmbed] | None,
-) -> list["EmailEmbedPayload"] | None:
+) -> list[EmailEmbedPayload] | None:
     if not embeds:
         return None
 

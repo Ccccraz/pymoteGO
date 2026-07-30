@@ -50,3 +50,32 @@ for i in range(10):
 
     sleep(duration)
 ```
+
+### Internal backup API
+
+The backup API is available only on cogmoteGO's loopback-only internal listener.
+The default address is `http://127.0.0.1:9011/api/`; do not expose this listener
+through a reverse proxy.
+
+```python
+from pymotego import BackupClient, BackupDestination, BackupSource
+
+source = BackupSource(
+    root_id="project-data",
+    entries=("20260713", "20260714/realdata/result.jsonl"),
+)
+destination = BackupDestination(
+    root_id="lab-nas",
+    path="experiments/project/data",
+)
+
+with BackupClient() as client:
+    created = client.create(source, destination)
+    current = client.current()
+
+print(created.id, current.status if current else "no task")
+```
+
+The source and Samba root IDs must already be configured in cogmoteGO. Creating
+a backup starts an asynchronous task; call `current()` to fetch its latest state.
+Before any task has been created, `current()` returns `None`.
