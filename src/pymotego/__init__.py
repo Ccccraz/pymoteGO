@@ -1,3 +1,16 @@
+from pymotego.backup import (
+    BackupAPIError,
+    BackupClient,
+    BackupDestination,
+    BackupEntry,
+    BackupEntryStatus,
+    BackupError,
+    BackupPhase,
+    BackupResponseError,
+    BackupSource,
+    BackupStatus,
+    BackupTask,
+)
 from pymotego.email import (
     EmailAttachment,
     EmailClient,
@@ -7,6 +20,17 @@ from pymotego.email import (
 )
 
 __all__ = [
+    "BackupAPIError",
+    "BackupClient",
+    "BackupDestination",
+    "BackupEntry",
+    "BackupEntryStatus",
+    "BackupError",
+    "BackupPhase",
+    "BackupResponseError",
+    "BackupSource",
+    "BackupStatus",
+    "BackupTask",
     "EmailAttachment",
     "EmailClient",
     "EmailEmbed",

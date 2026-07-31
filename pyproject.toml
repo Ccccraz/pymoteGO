@@ -6,12 +6,24 @@ readme = "README.md"
 authors = [
     { name = "HuYang", email = "hy.ccccr@gmail.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "httpx[http2]>=0.28.1",
+    "pydantic>=2.13.4,<3",
     "pyzmq>=27.0.1",
 ]
 
 [build-system]
 requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.411",
+    "ruff>=0.16.0",
+]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.14"
+typeCheckingMode = "strict"
