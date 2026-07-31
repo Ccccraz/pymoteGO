@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/cagelab/pymoteGO/compare/v0.1.5...v0.1.6) (2026-07-31)
+
+
+### Features
+
+* **backup:** :sparkles: add typed backup API client ([#19](https://github.com/cagelab/pymoteGO/issues/19)) ([5aef22b](https://github.com/cagelab/pymoteGO/commit/5aef22beb875e13012175fceecdd2e43caad8cc8))
+
 ## [0.1.5](https://github.com/cagelab/pymoteGO/compare/v0.1.4...v0.1.5) (2026-02-18)
 
 
