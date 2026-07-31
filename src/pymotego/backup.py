@@ -94,7 +94,7 @@ class BackupDestination(_BackupModel):
     """Trusted Samba destination for a backup."""
 
     root_id: str
-    path: str
+    path: str = "."
     type: Literal["samba"] = "samba"
 
 
